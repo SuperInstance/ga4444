@@ -1,0 +1,106 @@
+{
+ "canary": "fnv1a64('caf\u00e9 \u0394 \u65e5\u672c\u8a9e') == 0x24a555471370b18d OK",
+ "population": {
+  "early_boards_ply9": 6000,
+  "late_boards_ply16_p1ge5": 2171,
+  "walk": "run.py's walk, seed 0, deduped; late walk node-budgeted 400k"
+ },
+ "runtime_note": "13.0s to evaluate 2171 LATE boards",
+ "multi_optimal": {
+  "count": 961,
+  "frac": 0.4427,
+  "note": "compare 3x3's 48.6% per distinct board (pie-minimax wave-63)"
+ },
+ "partitions": {
+  "DEF-A_old": {
+   "S": {
+    "n": 1343,
+    "chance": 0.6339
+   },
+   "C": {
+    "n": 828,
+    "chance": 0.5652
+   }
+  },
+  "DEF-B_fixed": {
+   "S": {
+    "n": 2135,
+    "chance": 0.6067
+   },
+   "C": {
+    "n": 36,
+    "chance": 0.6667
+   }
+  },
+  "DEF-C_runpy": {
+   "S": {
+    "n": 2085,
+    "chance": 0.6054
+   },
+   "C": {
+    "n": 86,
+    "chance": 0.6628
+   }
+  }
+ },
+ "digest": {
+  "sha256": "7318cd0849e4bd8e4b6344dcba3484057a23c0d55e61603ea761241bc62be72a",
+  "fnv1a64": "0x2d30aec881bfbbb1",
+  "lines": 2171,
+  "canon": "sorted lines; board chars x/o/. row-major; '|'; optimal (row,col) as 'rc', sorted"
+ },
+ "baselines_DEF-B": {
+  "acc": {
+   "floor": {
+    "S": {
+     "mean": 0.5986,
+     "n": 2135
+    },
+    "C": {
+     "mean": 0.6111,
+     "n": 36
+    }
+   },
+   "logreg": {
+    "S": {
+     "mean": 0.9438,
+     "n": 2135
+    },
+    "C": {
+     "mean": 1.0,
+     "n": 36
+    }
+   },
+   "tree": {
+    "S": {
+     "mean": 0.8796,
+     "n": 2135
+    },
+    "C": {
+     "mean": 1.0,
+     "n": 36
+    }
+   }
+  },
+  "filled_headroom": {
+   "floor": {
+    "S": -0.0206,
+    "C": -0.1668
+   },
+   "logreg": {
+    "S": 0.8571,
+    "C": 1.0
+   },
+   "tree": {
+    "S": 0.6939,
+    "C": 1.0
+   }
+  },
+  "note": "models: sklearn logreg/tree, empty-cell-aware scoring (M1); labels = min(opt) single-target"
+ },
+ "overall": {
+  "verdict": "PARTITION-REDERIVED",
+  "reading": null,
+  "runtime_s": 13.4
+ }
+}
