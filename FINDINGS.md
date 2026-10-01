@@ -29,7 +29,7 @@ answer that is a fact about the representation rather than about your search.
 
 Rung order that actually measures something:
 
-1. **3x3** — done. 180,361 exact states. Linear model: 0.1807 against a 0.1431 floor.
+1. **3x3** — done. 5,478 exact states. Linear model: 0.1807 against a 0.1431 floor.
 2. **4x4 four-in-a-row** — this rung. Complete ground truth, still tractable.
 3. **5x5 / Connect 4** — measurement stops being about representation and starts being
    about how well you can search.
@@ -135,3 +135,21 @@ The differential test is in the repo, not in my shell history. The solver was wr
 separate times and every wrong version produced a clean-looking answer. What caught them was
 never the known-answer checks — it was a second implementation with a different
 representation, a different encoding, and a different search shape.
+
+
+---
+
+## CORRECTION — the state count was impossible
+
+This document previously said **180,361 reachable our-turn states**. That number cannot exist: a 3x3 board has 3^9 = 19,683 distinct states, so even labelling every one with whose turn gives at most 39,366. **180,361 is larger than the entire state space by a factor of 4.6.**
+
+The real numbers, from the repo's own `enumerate_reachable()`:
+
+- **5,478** reachable board states in total
+- **2,423** of them with US to move — this is the training set size
+- **1,177 (48.6%)** have more than one optimal move, not 14.7%
+- optimal-set sizes run 1 to 9; 456 positions have 3 optimal moves, 116 have 5
+
+The multi-optimal fraction matters more than the raw count: **a label set that picks one optimal move relabels 48.6% of positions as errors.** Any accuracy measured with single-move labels on this dataset is measuring agreement with an arbitrary tie-break, not correctness.
+
+The number was wrong in the same way as the fleet's `historybloat` signal — a figure that nobody checked against the size of the space it claims to count. **3^9 = 19,683 is a fact you can check in your head; the number should have been checked against it before it was written down.**
