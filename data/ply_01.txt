@@ -1,0 +1,38 @@
+# gale's game: 4x4 FOUR in a row (m,n,k = 4,4,4), no gravity,
+# a stone may be placed in any empty cell.  Five in a row is impossible
+# on a 4x4 grid -- the longest line is 4 -- and is not this game.
+#
+# value    : +1 the SIDE TO MOVE wins with best play, 0 draw, -1 loses.
+#           This table covers every ply, so the side to move alternates:
+#           even ply -> P0 to move, odd ply -> P1 to move.  The ply is
+#           popcount(p0|p1), so a reader can recover it from the boards.
+#           The P0-perspective value is value for an even ply and
+#           -value for an odd ply.
+# horizon  : NONE.  The board is 16 cells, so the search always reaches
+#           the end of the game.  Every row is exact.
+# legality : the game has not already ended -- neither side has four in
+#           a row and the board is not full.  Terminal positions are
+#           excluded and counted separately in the manifest.
+# order    : lexicographic in the first cell-index sequence that reaches
+#           the position, cell indices 0..15 row-major from the top
+#           left.  Deduplicated on the position itself.
+# fields   : p0 p1 value -- p0 and p1 are the 16-bit boards in unsigned
+#           decimal (bit i is cell i), value in {-1,0,+1}.
+# digest   : FNV-1a 64 over the data lines of all ply files in ply order,
+#           terminating newlines included, '#' lines excluded.
+1 0 0
+2 0 0
+4 0 0
+8 0 0
+16 0 0
+32 0 0
+64 0 0
+128 0 0
+256 0 0
+512 0 0
+1024 0 0
+2048 0 0
+4096 0 0
+8192 0 0
+16384 0 0
+32768 0 0

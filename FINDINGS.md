@@ -72,3 +72,60 @@ reason. `legal_moves` here also enumerates **every empty cell, not just column t
 in four-in-a-row a piece can land in a gap, and a column-only enumerator would silently
 miss legal positions and shrink the dataset without any error. That is the tic-tac-toe
 "only played one side of the tree" failure wearing a different hat.
+
+---
+
+## The ground truth exists now, and the seed's known answer for it is wrong
+
+`gt4444.c` generates the **complete** table: every legal non-terminal position
+of Gale's game at every ply, 9,067,975 of them, in 52 seconds on one core.
+FNV-1a 64 `32d6d9539cffc85a`, independently reproduced in Python over the
+files.
+
+**The empty board is a draw (0), not a first-player win.** The seed says first
+player wins. Three implementations disagree with the seed and agree with each
+other: the production solver (202,160 nodes), the same search with no
+transposition table and no threat shortcut (40,152,637 nodes), and an
+independent Python negamax written from the rules with nothing but alpha-beta
+(30,319,885 nodes). The program prints the failure and exits non-zero.
+
+That is a better outcome than a pass would have been. "First player wins" is a
+label; a draw is a label that a linear model cannot represent at all without
+the parity that `pie-minimax` measured, and the composition test below is much
+sharper on a board where a third of the positions are decided by a tie.
+
+## The check that made the table trustworthy, and the three bugs it caught
+
+There are two ways to check a solver: against another solver, or against the
+rules of the game. Only the second can see a bug the solvers share, and all
+three bugs here were shared.
+
+- `can_win_next(opponent) → LOSS(1)`: unsound, the threatened square can be
+  blocked. In all three solver variants at once.
+- `mirror()` not adding a half-move for the move into the child: every
+  distance-to-win wrong by one per recursion level, signs surviving by luck.
+- The child call handing the stone just played to the opponent: every value in
+  the table wrong, and the search 113x slower than it should be.
+
+None of these was visible to variant-vs-variant comparison. All three were
+visible to one line of C:
+
+    value(P) = max over moves m of ( m wins now ? +1 : −value(P after m) )
+
+applied to every exported position. 4,572,569 violations before, 0 after.
+
+**A verification pass that only cross-checks your own implementations is a
+control that cannot fail.** The ladder's other solvers should all carry a
+Bellman self-consistency check; `../connect4/ctool.c` now has one too, limited
+by how much of the table fits in a session.
+
+## What the composition test now has to run on
+
+- 2,730,266 positions where the side to move wins, 306,520 where it loses, and
+  **6,031,189 draws** — 66% of the table.
+- The draw class is the interesting one and it did not exist before. A position
+  that is neither a win nor a loss for the mover is exactly where "count the
+  threats" has to be right and a sum of per-cell votes has nothing to say.
+- The `SIMPLE` / `COMPOSED` split in the README still applies, and now every
+  row is exact, so a collapse in accuracy on `COMPOSED` is a fact about the
+  representation and not about a horizon.
