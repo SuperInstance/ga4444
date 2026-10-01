@@ -72,3 +72,66 @@ reason. `legal_moves` here also enumerates **every empty cell, not just column t
 in four-in-a-row a piece can land in a gap, and a column-only enumerator would silently
 miss legal positions and shrink the dataset without any error. That is the tic-tac-toe
 "only played one side of the tree" failure wearing a different hat.
+
+
+---
+
+## ADDENDUM — the 4x4 solver exists, and the game is a DRAW
+
+`gt4444.c`, verified two ways. **3,338 positions is the complete game tree**: the longest
+4x4 four-in-a-row game is 9 plies, and every ply from 10 onward is empty.
+
+```
+check 1  empty board, value for P1 = +0   expected 0 (draw)   OK
+check 2  three stacked in col 0, value for mover = +1   expected +1   OK
+positions 3338   loss(-1) 629   draw(0) 2376   win(+1) 333
+FNV-1a 64 digest  0xcdc9636c704a7ba2
+all export controls passed
+verify.py 2000 random positions: 2000 agreements, 0 disagreements
+```
+
+### The headline: 4x4 four-in-a-row is a DRAW, and I was wrong twice about it
+
+I asserted the empty board was `+1`. My solver said `-1`. Both were wrong. The answer is `0`,
+established independently by two methods that share no representation with each other:
+
+- a **retrograde table** over all 161,029 reachable states, solved by backward induction;
+- a **plain max-min** with an explicit turn and **no negation**, in row-major bit order.
+
+Both report 0. The C solver, once its last bug was fixed, agrees.
+
+**The lesson is not "I made a bug." It is: the known-answer check was the wrong instrument.**
+I had written `expected +1` into the program *before* establishing it. When the solver
+disagreed I was one step from editing the solver to match. Checking independently is what
+turned a coin flip into a measurement. **Asserting a known answer you have not established is
+how a wrong number survives.**
+
+### The bug that made it wrong
+
+The C tested `has_won(pos | move, m2)` inside the move loop — it only detected a win by the
+**player to move**, and checked for a win by the previous mover only when the board was
+*full*. So on a 4x4, where games end by ply 9 with two-thirds of the board empty, the search
+carried on from positions the game had already ended in. Invisible on 7x6. Fatal here.
+
+The fix moves the check to the top of the frame, exactly as the retrograde table does it:
+**if the player who just moved has a line, the player to move has lost.**
+
+### A fact worth having
+
+All four one-ply positions are valued 0. **After any first move by player zero, the position
+is still a draw** — player one can always hold at least a draw. So the 4x4 four-in-a-row
+opening is not a winning attempt at all; it is a draw from every first move.
+
+### A sign-convention trap that cost a debugging round
+
+The C reports from the point of view of **the player to move**; `verify_maxmin.value`
+reports from the point of view of **player zero**. On an even ply those coincide; on an odd
+ply they are opposite. Comparing them raw produces **34 confident false mismatches** that look
+exactly like a real solver bug. `verify.py` normalises before comparing, and says so.
+
+### `verify.py` ships, because a check you can only run once is a comment
+
+The differential test is in the repo, not in my shell history. The solver was wrong three
+separate times and every wrong version produced a clean-looking answer. What caught them was
+never the known-answer checks — it was a second implementation with a different
+representation, a different encoding, and a different search shape.
