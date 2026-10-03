@@ -1,0 +1,107 @@
+== 1. FNV-1a 64, hand rolled, no library ==
+  [ ok ] fnv1a64("")       == cbf29ce484222325
+  [ ok ] fnv1a64("a")      == af63dc4c8601ec8c
+  [ ok ] fnv1a64("foobar") == 85944171f73967e8
+  [ ok ] byte-loop FNV-1a is stable
+
+== 1b. value encoding self-check ==
+  [ ok ] LOSS(2) < LOSS(3) < LOSS(9) < DRAW < WIN(1) < WIN(2) < WIN(9)
+  [ ok ] V_DIST inverts the encoding
+  [ ok ] mirror is order-reversing and adds one half-move
+  [ ok ] V_SIGN reads the outcome
+
+== 2. board constants and win detection ==
+  [ ok ] ALL == 0xFFFF and popcount 16
+  [ ok ] all 10 winning lines detected (4 rows, 4 cols, 2 diagonals)
+  [ ok ] line count is 10
+  [ ok ] three of a diagonal is not a win
+
+== 3. bitboard vs flat-array reference, EVERY position to ply 9 ==
+  positions compared : 2900051
+  is_win mismatches  : 0
+  threat mismatches  : 0
+  structural faults  : 0
+  seconds            : 1.45
+  [ ok ] bitboard primitives agree with the flat reference everywhere
+
+== 4. known-answer check ==
+  A  empty board, P1 to move
+     value(P1) = +0   nodes 202160   0.2s
+     reference (no TT, no threat shortcut): value(P1) = +0   nodes 40152637   0.9s
+  [ ok ] A' production == TT-free pruning-free on the empty board
+  [FAIL] A  value(P1) == +1   [value specified in the task: "first player wins"]
+     MEASURED: a DRAW.  Both players can hold, neither can force a
+     win.  Confirmed by the TT-free reference above and by an
+     independent Python negamax (30.3M nodes) that also returns 0.
+     The task's specified answer (+1) is not this game's value.
+
+== 5. solver validation: production vs TT-free and pruning-free,
+      first 20000 positions at ply 10 ==
+      compared 20000  agreed 20000  disagreed 0   (production 399561 nodes, reference 2224920 nodes)  1.3s
+  [ ok ] production == TT-free pruning-free reference
+
+  VALIDATION FAILED (1 check(s)); the table is not trustworthy.
+
+== 6. export ==
+  ply  0:            1 positions     0.01s              1 nodes   hist -1:0 0:1 +1:0
+  ply  1:           16 positions     0.08s         371870 nodes   hist -1:0 0:16 +1:0
+  ply  2:          240 positions     0.25s         876172 nodes   hist -1:0 0:240 +1:0
+  ply  3:         1680 positions     0.54s        1491925 nodes   hist -1:0 0:1680 +1:0
+  ply  4:        10920 positions     1.01s        3560939 nodes   hist -1:0 0:10920 +1:0
+  ply  5:        43680 positions     1.83s        5017280 nodes   hist -1:0 0:43680 +1:0
+  ply  6:       160160 positions     3.62s       13197805 nodes   hist -1:0 0:151360 +1:8800
+  ply  7:       398200 positions     5.79s       15011740 nodes   hist -1:0 0:378504 +1:19696
+  ply  8:       891026 positions     9.97s       23190249 nodes   hist -1:0 0:677232 +1:213794
+  ply  9:      1394128 positions    14.14s       20593853 nodes   hist -1:52456 0:1087208 +1:254464
+  ply 10:      1908592 positions    19.43s       17659078 nodes   hist -1:35584 0:1141208 +1:731800
+  ply 11:      1800624 positions    25.14s       10785784 nodes   hist -1:128224 0:1142368 +1:530032
+  ply 12:      1415400 positions    30.72s        5713012 nodes   hist -1:45136 0:745992 +1:624272
+  ply 13:       714208 positions    35.82s        2268948 nodes   hist -1:40992 0:439424 +1:233792
+  ply 14:       270304 positions    41.22s         653968 nodes   hist -1:4128 0:163152 +1:103024
+  ply 15:        53440 positions    45.78s          94285 nodes   hist -1:0 0:42848 +1:10592
+  ply 16:         5356 positions    50.58s           5356 nodes   hist -1:0 0:5356 +1:0
+
+== 7. Bellman consistency over EVERY exported position ==
+  positions checked  : 9067975
+  violations         : 0
+  seconds            : 6.0
+  [ ok ] every exported value satisfies the Bellman equation
+
+======================== MANIFEST ========================
+board                 gale's game, 4x4 FOUR in a row, no gravity,
+                      any empty cell, P1 first
+solver                32-bit negamax, alpha-beta, TT 256 MiB, 2 sound threat reductions
+search bound          NONE, the 16-cell board always terminates
+value convention      +1 SIDE TO MOVE wins / 0 draw / -1 loses;
+                      even ply P0 to move, odd ply P1 to move
+coverage              COMPLETE: every legal non-terminal position
+                      at every ply 0..16
+checks failed         1
+known-answer          empty board, P1 to move: +0 (specified +1)  FAIL
+positions exported    9067975
+value histogram       -1 306520    0 6031189    +1 2730266
+per ply               ply    positions           -1            0           +1      terminal
+                       0              1             0             1             0             0
+                       1             16             0            16             0             0
+                       2            240             0           240             0             0
+                       3           1680             0          1680             0             0
+                       4          10920             0         10920             0             0
+                       5          43680             0         43680             0             0
+                       6         160160             0        151360          8800             0
+                       7         398200             0        378504         19696        202400
+                       8         891026             0        677232        213794        413616
+                       9        1394128         52456       1087208        254464       2993792
+                      10        1908592         35584       1141208        731800       3454976
+                      11        1800624        128224       1142368        530032       8421504
+                      12        1415400         45136        745992        624272       5617920
+                      13         714208         40992        439424        233792       5959296
+                      14         270304          4128        163152        103024       1753472
+                      15          53440             0         42848         10592        565440
+                      16           5356             0          5356             0         31776
+nodes (search)        163471543
+seconds (export)      50.58
+seconds (total run)   60.28
+fnv1a64 (export)      32d6d9539cffc85a
+==========================================================
+
+EXITING NON-ZERO: 1 check(s) failed.
